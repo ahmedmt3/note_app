@@ -1,2 +1,5 @@
-# note_app
- Modern Note Taking Application
+# Note App
+## Modern Note Taking Application with Flutter
+- Flutter
+- GetX MVC
+- Sqflite Database
