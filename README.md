@@ -2,4 +2,6 @@
 ## Modern Note Taking app with Flutter
 - Flutter
 - GetX MVC
-- Sqflite Database
+- Api
+- Backend `Php + MySQL` Database
+- Shered Preferences
