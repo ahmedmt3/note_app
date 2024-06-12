@@ -3,6 +3,7 @@ import 'package:path/path.dart';
 
 class SqlDb {
   static Database? _db;
+  static int dbVersion = 2;
 
   Future<Database?> get db async {
     if (_db == null) {
@@ -17,12 +18,15 @@ class SqlDb {
     String databasePath = await getDatabasesPath();
     String path = join(databasePath, 'note.db');
     Database mydb = await openDatabase(path,
-        onCreate: _onCreate, version: 1, onUpgrade: _onUpgrade);
+        onCreate: _onCreate, version: dbVersion, onUpgrade: _onUpgrade);
     return mydb;
   }
 
   _onUpgrade(Database db, int oldVersion, int newVersion) async {
     db.batch();
+    db.execute('''
+    ALTER TABLE 'notes' ADD COLUMN 'last_modified' TEXT NOT NULL DEFAULT '${DateTime.now().toIso8601String()}'
+    ''');
     await db.batch().commit();
 
     print("====> On Upgrade Called <=====================");
@@ -34,7 +38,8 @@ class SqlDb {
       "id" INTEGER PRIMARY KEY AUTOINCREMENT,
       "title" TEXT NOT NULL,
       "content" TEXT,
-      "color" VARCHAR(50) DEFAULT 'white'
+      "color" VARCHAR(50) DEFAULT 'ffffff',
+      "created_at" TEXT NOT NULL DEFAULT '${DateTime.now().toIso8601String()}'
     )
     ''');
     print("====> On Create Called <=====================");
@@ -68,10 +73,10 @@ class SqlDb {
     return response;
   }
 
-  // DATABASE DELETE
-  // deleteDatabase() async {
-  //   String databasePath = await getDatabasesPath();
-  //   String path = join(databasePath, 'note.db');
-  //   await databaseFactory.deleteDatabase(path);
-  // }
+  //DATABASE DELETE
+  deleteDatabase() async {
+    String databasePath = await getDatabasesPath();
+    String path = join(databasePath, 'note.db');
+    await databaseFactory.deleteDatabase(path);
+  }
 }

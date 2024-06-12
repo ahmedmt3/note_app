@@ -11,9 +11,10 @@ TextFormField customTextField({
     controller: controller, //Passed Controller
     validator: validator,
     autovalidateMode: AutovalidateMode.onUserInteraction,
+    textAlignVertical: TextAlignVertical.top,
     expands: expands,
     minLines: null,
-    maxLines: expands==true? null : 1,
+    maxLines: expands == true ? null : 1,
     decoration: InputDecoration(
       hintText: hint, //Passed hint text
       suffixIcon: Icon(suffixIcon),
@@ -22,7 +23,7 @@ TextFormField customTextField({
         borderRadius: BorderRadius.all(Radius.circular(10)),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: Colors.green),
+        // borderSide: const BorderSide(color: Colors.green),
         borderRadius: BorderRadius.circular(10),
       ),
     ),
