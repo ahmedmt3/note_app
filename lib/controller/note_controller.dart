@@ -1,30 +1,35 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:note_app/db.dart';
+import 'package:note_app/model/image.dart';
 import 'package:note_app/model/note.dart';
-import 'package:note_app/util/helpers/app_helper.dart';
 import 'package:note_app/util/helpers/app_loaders_helper.dart';
-import 'package:note_app/util/services/api_service.dart';
+import 'package:note_app/util/services/api_services.dart';
+import 'package:note_app/util/services/files_services.dart';
 
 import '../view/widgets/custom_snackbar.dart';
 
 class NoteController extends GetxController {
   final ApiServices _apiServices = ApiServices();
-  SqlDb sqlDb = SqlDb();
   var notes = <Note>[].obs;
+  var images = <NoteImage>[].obs;
   TextEditingController title = TextEditingController();
   TextEditingController content = TextEditingController();
   TextEditingController color = TextEditingController();
   DateTime? createdAt;
-  int? nId;
-  // Timer? _timer;
+  Note? currNote;
+  NoteImage? currImage;
   var isLoading = false.obs;
   final formKey = GlobalKey<FormState>();
+  final FilesServices _filesServices = FilesServices();
+  File? _image;
+  bool fromDelete = false;
+  Rx<Offset> imgPosition = const Offset(0, 0).obs;
 
   // ==================[ Loading All Notes ]===============
 
@@ -38,16 +43,22 @@ class NoteController extends GetxController {
 
     isLoading(true);
     notes.clear();
-    var response = await _apiServices.getRequest(endPoint: 'notes/');
+    images.clear();
+    var notesResponse = await _apiServices.getRequest(endPoint: 'notes/');
+    var imageResponse = await _apiServices.getRequest(endPoint: 'images/');
 
-    if (response != null) {
-      response = jsonDecode(response.body);
-      response.forEach(
-        (element) => notes.add(Note.fromMap(element)),
+    if (notesResponse != null) {
+      notesResponse = jsonDecode(notesResponse.body);
+      notesResponse.forEach(
+        (element) => notes.add(Note.fromJson(element)),
       );
     }
-    log(response.toString());
-    log(notes.length.toString());
+    if (imageResponse != null) {
+      imageResponse = jsonDecode(imageResponse.body);
+      imageResponse.forEach((image) => images.add(NoteImage.fromJson(image)));
+    }
+    log("Notes: ${notesResponse.toString()}");
+    log("Images: ${imageResponse.toString()}");
 
     isLoading(false);
     if (showLoading) {
@@ -56,15 +67,21 @@ class NoteController extends GetxController {
     update();
   }
 
+  //=================[ Adding Note ]=================
+
   void addNote() async {
-    // isLoading(true);
-    if (formKey.currentState!.validate()) {
-      var response =
-          await _apiServices.postRequest(endPoint: 'notes/add.php', data: {
-        'title': title.text.isEmpty ? "Empty note" : title.text,
-        'content': content.text.isEmpty ? " " : content.text,
-        //You can send the color, by default = #FFFFFF
-      });
+    if (!content.text.isBlank!) {
+      var response = await _apiServices.postRequestWithFile(
+          endPoint: 'notes/add.php',
+          fileField: 'image',
+          file: _image,
+          data: {
+            'title': title.text.isEmpty ? "New Note" : title.text,
+            'content': content.text.isEmpty ? " " : content.text,
+            'image_pos_x': '${imgPosition.value.dx}',
+            'image_pos_y': '${imgPosition.value.dy}',
+            //You can send color, by default = #FFFFFF
+          });
 
       if (response != null) {
         response = jsonDecode(response.body);
@@ -79,46 +96,69 @@ class NoteController extends GetxController {
         }
       }
     }
+
     update();
   }
 
-  //======= Update ==========
+  //===============[ Update ]=====================
+
   void prepairUpdate(Note note) {
-    title.text = note.title ?? "";
-    content.text = note.content ?? "";
-    color.text = note.color ?? "";
-    nId = note.id;
+    title.text = note.title!;
+    content.text = note.content!;
+    currNote = note;
+    currImage = images.where((image) => image.noteId == note.id).firstOrNull;
+    if (currImage != null) {
+      imgPosition.value = Offset(currImage!.imagePosX!, currImage!.imagePosY!);
+    }
     update();
+  }
+
+  bool changed() {
+    return !(title.text == currNote!.title &&
+        content.text == currNote!.content &&
+        imgPosition.value.dx == currImage!.imagePosX &&
+        imgPosition.value.dy == currImage!.imagePosY);
   }
 
   void updateNote() async {
-    var response =
-        await _apiServices.postRequest(endPoint: 'notes/update.php', data: {
-      'id': '$nId',
-      'title': title.text,
-      'content': content.text,
-      'color': color.text,
-      'last_modified': DateTime.now().toIso8601String()
-    });
+    if (changed()) {
+      log("Image Position X: ${imgPosition.value.dx}");
+      log("Image Position Y: ${imgPosition.value.dy}");
 
-    if (response != null) {
-      response = jsonDecode(response.body);
-      log(response.toString());
+      var response = await _apiServices.postRequestWithFile(
+          endPoint: 'notes/update.php',
+          fileField: 'image',
+          file: _image,
+          data: {
+            'id': '${currNote!.id}',
+            'title': title.text,
+            'content': content.text,
+            'color': color.text,
+            'image_pos_x': '${imgPosition.value.dx}',
+            'image_pos_y': '${imgPosition.value.dy}'
+          });
 
-      if (response['message'] == 'success') {
-        clearFields();
-        Get.back();
-        loadNotes();
-      } else {
-        showSnackbar(title: "Err:", message: response['message']);
+      if (response != null) {
+        response = jsonDecode(response.body);
+        log(response.toString());
+
+        if (response['message'] == 'success') {
+          clearFields();
+          Get.back();
+          loadNotes();
+        } else {
+          showSnackbar(title: "Err:", message: response['message']);
+        }
       }
     }
   }
 
-  //========== Delete ==============
+  //=================[ Delete ]================
+
   void deleteNote() async {
-    var response = await _apiServices
-        .postRequest(endPoint: 'notes/delete.php', data: {'id': '$nId'});
+    var response = await _apiServices.postRequest(
+        endPoint: 'notes/delete.php',
+        data: {'id': '${currNote!.id}', 'image_name': currImage!.imageName});
 
     if (response != null) {
       response = jsonDecode(response.body);
@@ -127,48 +167,50 @@ class NoteController extends GetxController {
       if (response['message'] == 'success') {
         await Future.delayed(const Duration(milliseconds: 300));
         clearFields();
+        fromDelete = true;
         Get.back();
         loadNotes();
+        fromDelete = false;
       } else {
-        showSnackbar(title: "Err:", message: response['message']);
+        showSnackbar(title: "Error:", message: response['message']);
       }
     }
   }
 
-  //====== VALIDATION ==========
-  String? validateTitle(String? title) {
-    if (GetUtils.isNullOrBlank(title) == true) {
-      return "Title is required";
+  //=================[ Image functions ]================
+  void pickImage({bool fromCamera = false}) async {
+    var result = await _filesServices.pickImage(fromCamera: fromCamera);
+    if (result != null) {
+      _image = File(result.path);
     }
-    return null;
   }
 
-  String? validateColor(String? color) {
-    if (AppHelper.isValidHexColor(color!)) {
-      return "Incorrect color type";
-    }
-    return null;
+  void updateImgPosition(Offset newPosition) {
+    imgPosition.value = newPosition;
   }
-  //====== END VALIDATION ==========
+
+  void onBackClick(bool click) {
+    if (!fromDelete) {
+      if (currNote != null) {
+        updateNote();
+      } else {
+        addNote();
+      }
+    }
+  }
 
   void clearFields() {
     title.clear();
     content.clear();
     color.clear();
     title.clear();
+    currNote = null;
+    _image = null;
     update();
   }
 
-  // void startTimer() {
-  //   _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
-  //     loadNotes();
-  //   });
-  // }
-
   @override
   void onInit() {
-    // sqlDb.deleteDatabase();
-
     super.onInit();
   }
 

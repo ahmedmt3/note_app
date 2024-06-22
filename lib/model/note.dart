@@ -1,13 +1,18 @@
+import 'package:note_app/model/image.dart';
+
 class Note {
   int? id;
+  int? userId;
   String? title;
   String? content;
   String? color;
   String? createdAt;
   String? lastModified;
+  List<NoteImage>? images;
 
   Note({
     this.id,
+    this.userId,
     this.title,
     this.content,
     this.color,
@@ -15,18 +20,22 @@ class Note {
     this.lastModified,
   });
 
-  Note.fromMap(Map<dynamic, dynamic> map) {
-    id = map['id'];
-    title = map['title'];
-    content = map['content'];
-    color = map['color'];
-    createdAt = map['created_at'];
-    lastModified = map['last_modified'];
+  // From json
+  Note.fromJson(Map<dynamic, dynamic> json) {
+    id = json['id'];
+    userId = json['user_id'];
+    title = json['title'];
+    content = json['content'];
+    color = json['color'];
+    createdAt = json['created_at'];
+    lastModified = json['last_modified'];
   }
 
-  Map<String, dynamic> toMap() {
+  // To Json
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'user_id': userId,
       'title': title,
       'content': content,
       'color': color,

@@ -1,105 +1,119 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:get/get.dart';
 import 'package:note_app/controller/note_controller.dart';
+import 'package:note_app/view/widgets/note_image_widget.dart';
 import 'package:note_app/view/widgets/text_field.dart';
 
-class AddNote extends StatelessWidget {
-  AddNote({super.key});
+class NoteView extends GetView {
+  NoteView({super.key});
 
   var arg = Get.arguments;
   bool isUpdate(arg) {
-    return arg != null && arg['state'] != null;
+    return arg != null && arg['note'] != null;
   }
 
-  String markDown = '''
-  # A first-level heading
-  ## A second-level heading
-  ### A third-level heading
-  ''';
+  // String markDown = '''
+  // # A first-level heading
+  // ## A second-level heading
+  // ### A third-level heading
+  // ''';
 
-  NoteController noteController = Get.find<NoteController>();
+  final NoteController noteController = Get.find<NoteController>();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: SizedBox(
-          width: 200,
-          child: TextField(
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              hintText: "Title here",
+    return PopScope(
+      onPopInvoked: (didPop) => noteController.onBackClick(didPop),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF2F2F2),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFF2F2F2),
+          title: SizedBox(
+            width: 200,
+            child: TextField(
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                hintText: "Title",
+              ),
+              controller: noteController.title,
             ),
-            controller: noteController.title,
-            autofocus: !isUpdate(arg),
           ),
+          actions: [
+            PopupMenuButton(
+                icon: const Icon(Icons.attachment_outlined),
+                itemBuilder: (context) => [
+                      PopupMenuItem(
+                          onTap: () =>
+                              noteController.pickImage(fromCamera: true),
+                          value: 'camera',
+                          child: const Row(
+                            children: [
+                              Icon(Icons.camera),
+                              SizedBox(width: 5),
+                              Text("Camera"),
+                            ],
+                          )),
+                      PopupMenuItem(
+                        onTap: () => noteController.pickImage(),
+                        value: 'gallery',
+                        child: const Row(
+                          children: [
+                            Icon(Icons.photo_library_outlined),
+                            SizedBox(width: 5),
+                            Text("Gallery"),
+                          ],
+                        ),
+                      ),
+                    ]),
+            PopupMenuButton(
+                itemBuilder: (context) => [
+                      PopupMenuItem(
+                          value: 'delete',
+                          onTap: () => noteController.deleteNote(),
+                          child: const Row(
+                            children: [Icon(Icons.delete), Text("Delete Note")],
+                          )),
+                    ])
+          ],
         ),
-        leading: IconButton(
-            onPressed: () {
-              noteController.clearFields();
-              Get.back();
-            },
-            icon: const Icon(Icons.arrow_back_ios_new)),
-        actions: isUpdate(arg)
-            ? [
-                PopupMenuButton(
-                    itemBuilder: (context) => [
-                          PopupMenuItem(
-                              value: 'delete',
-                              onTap: () => noteController.deleteNote(),
-                              child: const Row(
-                                children: [
-                                  Icon(Icons.delete),
-                                  Text("Delete Note")
-                                ],
-                              )),
-                        ])
-              ]
-            : null,
-      ),
-      body: GetBuilder<NoteController>(
-        builder: (noteController) => SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Form(
-                key: noteController.formKey,
-                child: Column(
+        body: GetBuilder<NoteController>(
+          builder: (noteController) => SafeArea(
+            child: SingleChildScrollView(
+              child: DragTarget<Offset>(
+                // onWillAcceptWithDetails: (details) => true,
+                onAcceptWithDetails: (details) =>
+                    noteController.updateImgPosition(details.offset),
+                builder: (context, candidateData, rejectedData) => Stack(
+                  alignment: Alignment.bottomCenter,
                   children: [
-                    const SizedBox(height: 20),
                     SizedBox(
                       height: 500,
-                      child: customTextField(
+                      child: CustomTextField(
                         controller: noteController.content,
                         hint: "Write here...",
-                        suffixIcon: Icons.note,
                         expands: true,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    // SizedBox(
-                    //   height: 200,
-                    //   child: SelectionArea(
-                    //     child: Markdown(
-                    //       data: markDown,
-                    //       selectable: true,
-                    //     ),
-                    //   ),
-                    // ),
-                    SizedBox(
-                      width: 200,
-                      child: MaterialButton(
-                        onPressed: () {
-                          isUpdate(arg)
-                              ? noteController.updateNote()
-                              : noteController.addNote();
-                        },
-                        textColor: Colors.white,
-                        color: Colors.blue,
-                        child: Text(isUpdate(arg) ? 'Update Note' : 'Add Note'),
+                    if (noteController.currNote != null &&
+                        noteController.currImage!.imageName != null)
+                      Obx(
+                        () => Positioned(
+                          left: noteController.imgPosition.value.dx,
+                          top: noteController.imgPosition.value.dy,
+                          child: Draggable<Offset>(
+                            data: noteController.imgPosition.value,
+                            feedback: NoteImageWidget(
+                                currImage: noteController.currImage!),
+                            childWhenDragging: Opacity(
+                              opacity: 0.5,
+                              child: NoteImageWidget(
+                                  currImage: noteController.currImage!),
+                            ),
+                            child: NoteImageWidget(
+                                currImage: noteController.currImage!),
+                          ),
+                        ),
                       ),
-                    )
                   ],
                 ),
               ),

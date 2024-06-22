@@ -11,7 +11,7 @@ GestureDetector noteCard(Note note, NoteController noteController) {
     onTap: () {
       // If User tapped on a note, Take him to edit mode on note_view
       noteController.prepairUpdate(note);
-      Get.toNamed('/addNote', arguments: {'state': 'Update'});
+      Get.toNamed('/notePage', arguments: {'note': note});
     },
     child: Container(
         clipBehavior: Clip.hardEdge,
@@ -27,7 +27,7 @@ GestureDetector noteCard(Note note, NoteController noteController) {
               clipBehavior: Clip.hardEdge,
               child: Container(
                 width: double.infinity,
-                // 
+                //
                 height: 150,
                 padding: const EdgeInsets.all(8),
                 child: Text(note.content!.substring(0,

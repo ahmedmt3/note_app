@@ -4,11 +4,11 @@ import 'package:note_app/view/note_view.dart';
 import 'package:note_app/view/home_view.dart';
 
 void main() {
-  runApp(MainApp());
+  runApp(const MainApp());
 }
 
 class MainApp extends StatelessWidget {
-  MainApp({super.key});
+  const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -17,10 +17,13 @@ class MainApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       getPages: [
-        GetPage(name: '/', page: (() => HomePage())),
         GetPage(
-          name: '/addNote',
-          page: (() => AddNote()),
+          name: '/',
+          page: (() => HomePage()),
+        ),
+        GetPage(
+          name: '/notePage',
+          page: (() => NoteView()),
         )
       ],
     );

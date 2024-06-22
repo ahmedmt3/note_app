@@ -14,7 +14,7 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Get.toNamed('/addNote');
+          Get.toNamed('/notePage');
         },
         child: const Icon(Icons.add),
       ),
@@ -36,12 +36,12 @@ class HomePage extends StatelessWidget {
                             crossAxisCount: 2, mainAxisExtent: 220),
                     itemCount: noteController.notes.length,
                     itemBuilder: (context, index) {
-                      if (index < noteController.notes.length) {
-                        return noteCard(
-                            noteController.notes[index], noteController);
-                      } else {
-                        return Container();
-                      }
+                      return noteController.notes.isEmpty
+                          ? const Center(
+                              child: Text("You have no Notes"),
+                            )
+                          : noteCard(
+                              noteController.notes[index], noteController);
                     },
                   ),
                 )),

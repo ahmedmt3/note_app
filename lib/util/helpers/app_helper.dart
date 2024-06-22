@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class AppHelper {
   static String formatDate(String dateString) {
     DateTime dateTime = DateTime.parse(dateString);
@@ -27,5 +29,12 @@ class AppHelper {
   static bool isValidHexColor(String color) {
     final hexColorPattern = RegExp(r'^[0-9A-Fa-f]{6}$');
     return !hexColorPattern.hasMatch(color);
+  }
+
+  static double screenHeight(BuildContext ctx) {
+    return MediaQuery.of(ctx).size.height;
+  }
+  static double screenWidth(BuildContext ctx) {
+    return MediaQuery.of(ctx).size.width;
   }
 }
