@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
-import 'package:note_app/app/app_config.dart';
+import 'package:note_app/core/config/app_config.dart';
 import 'package:path/path.dart';
 
 class ApiServices {
@@ -17,7 +17,7 @@ class ApiServices {
         await http.get(Uri.parse(fullUrl), headers: myheaders);
 
     if (response.statusCode == 200) {
-      return response;
+      return jsonDecode(response.body);
     } else {
       return null;
     }
@@ -31,7 +31,7 @@ class ApiServices {
         await http.post(Uri.parse(fullUrl), body: data, headers: myheaders);
 
     if (response.statusCode == 200) {
-      return response;
+      return jsonDecode(response.body);
     } else {
       return null;
     }
@@ -60,7 +60,7 @@ class ApiServices {
     var streamedResponse = await request.send();
     var response = await http.Response.fromStream(streamedResponse);
     if (response.statusCode == 200) {
-      return response;
+      return jsonDecode(response.body);
     } else {
       return null;
     }

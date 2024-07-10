@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:note_app/controller/note_controller.dart';
 import 'package:note_app/util/helpers/app_helper.dart';
-import 'package:note_app/util/theme/app_styles.dart';
+import 'package:note_app/core/theme/app_styles.dart';
 
-import '../../model/note.dart';
+import '../../../model/note.dart';
 
 GestureDetector noteCard(Note note, NoteController noteController) {
   return GestureDetector(
@@ -23,15 +23,25 @@ GestureDetector noteCard(Note note, NoteController noteController) {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Card(
-              clipBehavior: Clip.hardEdge,
-              child: Container(
-                width: double.infinity,
-                //
-                height: 150,
-                padding: const EdgeInsets.all(8),
-                child: Text(note.content!.substring(0,
-                    note.content!.length > 150 ? 150 : note.content!.length)),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                splashColor: Colors.red,
+                highlightColor: Colors.blue,
+                child: Card(
+                  clipBehavior: Clip.hardEdge,
+                  child: Container(
+                    width: double.infinity,
+                    //
+                    height: 150,
+                    padding: const EdgeInsets.all(8),
+                    child: Text(note.content!.substring(
+                        0,
+                        note.content!.length > 150
+                            ? 150
+                            : note.content!.length)),
+                  ),
+                ),
               ),
             ),
             Text(

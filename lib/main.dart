@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:note_app/view/note_view.dart';
-import 'package:note_app/view/home_view.dart';
+import 'package:note_app/view/auth/login_view.dart';
+import 'package:note_app/view/main/note_view.dart';
+import 'package:note_app/view/main/home_view.dart';
 
 void main() {
   runApp(const MainApp());
@@ -23,7 +24,11 @@ class MainApp extends StatelessWidget {
         ),
         GetPage(
           name: '/notePage',
-          page: (() => NoteView()),
+          page: () => NoteView(),
+        ),
+        GetPage(
+          name: '/login',
+          page: () => const LoginView(),
         )
       ],
     );

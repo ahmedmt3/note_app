@@ -1,8 +1,8 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:flutter/material.dart';
 
-class CustomTextField extends StatelessWidget {
-  const CustomTextField({
+class NoteTextField extends StatelessWidget {
+  const NoteTextField({
     Key? key,
     this.controller,
     this.hint,
@@ -34,7 +34,7 @@ class CustomTextField extends StatelessWidget {
           borderSide: BorderSide(width: 0, color: Colors.grey),
           borderRadius: BorderRadius.zero,
         ),
-        focusedBorder: OutlineInputBorder(
+        focusedBorder: const OutlineInputBorder(
           borderSide: BorderSide(width: 0, color: Colors.grey),
           borderRadius: BorderRadius.zero,
         ),

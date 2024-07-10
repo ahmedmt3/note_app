@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:note_app/app/app_config.dart';
+import 'package:note_app/core/config/app_config.dart';
 import 'package:note_app/model/image.dart';
 
 class NoteImageWidget extends StatelessWidget {

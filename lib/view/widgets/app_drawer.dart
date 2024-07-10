@@ -1,53 +1,64 @@
 import 'package:flutter/material.dart';
-import 'package:note_app/util/theme/app_styles.dart';
+import 'package:get/get.dart';
+import 'package:note_app/controller/note_controller.dart';
+import 'package:note_app/view/widgets/drawer_menu_widget.dart';
 
 class AppDrawer extends StatelessWidget {
-  const AppDrawer({
+  AppDrawer({
     super.key,
   });
+  final NoteController noteController = Get.find<NoteController>();
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      child: Container(
-        padding: const EdgeInsets.all(15),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 70),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 130),
-            Row(
+            const Row(
               children: [
-                Icon(Icons.menu, size: 30),
-                SizedBox(width: 10),
-                Text(
-                  "All notes",
-                  style:
-                      AppStyles.heading3.copyWith(fontWeight: FontWeight.w500),
-                )
+                SizedBox(width: 30),
+                SizedBox(
+                  width: 150,
+                  height: 150,
+                  child: CircleAvatar(
+                    backgroundImage:
+                        AssetImage('assets/images/user-avatar.png'),
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                const Icon(Icons.star_border_rounded, size: 30),
-                const SizedBox(width: 10),
-                Text(
-                  "Favorites",
-                  style:
-                      AppStyles.heading3.copyWith(fontWeight: FontWeight.w500),
-                )
-              ],
+            const SizedBox(height: 20),
+            DrawerMenuWidget(
+              title: "All notes",
+              icon: Icons.menu,
+              onTap: () {},
+              isActive: true,
+              itemCount: noteController.notes.length.toString(),
             ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                const Icon(Icons.folder, size: 30),
-                const SizedBox(width: 10),
-                Text(
-                  "Folders",
-                  style:
-                      AppStyles.heading3.copyWith(fontWeight: FontWeight.w500),
-                )
-              ],
+            const SizedBox(height: 20),
+            DrawerMenuWidget(
+              title: "Favourites",
+              icon: Icons.star_border_rounded,
+              onTap: () {},
+            ),
+            const SizedBox(height: 20),
+            DrawerMenuWidget(
+              title: "Folders",
+              icon: Icons.folder_outlined,
+              onTap: () {},
+            ),
+            const SizedBox(height: 20),
+            const Divider(),
+            const Spacer(),
+            DrawerMenuWidget(
+              title: "Logout",
+              icon: Icons.logout_outlined,
+              iconColor: Colors.redAccent,
+              onTap: () => Get.toNamed('/login'),
+              textColor: Colors.redAccent,
             ),
           ],
         ),

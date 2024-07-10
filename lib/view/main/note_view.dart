@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:note_app/controller/note_controller.dart';
-import 'package:note_app/view/widgets/note_image_widget.dart';
-import 'package:note_app/view/widgets/text_field.dart';
+import 'package:note_app/view/main/widgets/note_image_widget.dart';
+import 'package:note_app/view/main/widgets/note_text_field.dart';
 
 class NoteView extends GetView {
   NoteView({super.key});
 
-  var arg = Get.arguments;
+  final arg = Get.arguments;
   bool isUpdate(arg) {
     return arg != null && arg['note'] != null;
   }
@@ -80,7 +80,7 @@ class NoteView extends GetView {
           builder: (noteController) => SafeArea(
             child: SingleChildScrollView(
               child: DragTarget<Offset>(
-                // onWillAcceptWithDetails: (details) => true,
+                onWillAcceptWithDetails: (details) => true,
                 onAcceptWithDetails: (details) =>
                     noteController.updateImgPosition(details.offset),
                 builder: (context, candidateData, rejectedData) => Stack(
@@ -88,14 +88,13 @@ class NoteView extends GetView {
                   children: [
                     SizedBox(
                       height: 500,
-                      child: CustomTextField(
+                      child: NoteTextField(
                         controller: noteController.content,
                         hint: "Write here...",
                         expands: true,
                       ),
                     ),
-                    if (noteController.currNote != null &&
-                        noteController.currImage!.imageName != null)
+                    if (noteController.currImage != null)
                       Obx(
                         () => Positioned(
                           left: noteController.imgPosition.value.dx,

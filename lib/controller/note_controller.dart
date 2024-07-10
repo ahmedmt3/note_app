@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:note_app/db.dart';
 import 'package:note_app/model/image.dart';
 import 'package:note_app/model/note.dart';
 import 'package:note_app/util/helpers/app_loaders_helper.dart';
@@ -29,7 +28,7 @@ class NoteController extends GetxController {
   final FilesServices _filesServices = FilesServices();
   File? _image;
   bool fromDelete = false;
-  Rx<Offset> imgPosition = const Offset(0, 0).obs;
+  Rx<Offset> imgPosition = const Offset(100, 100).obs;
 
   // ==================[ Loading All Notes ]===============
 
@@ -44,20 +43,19 @@ class NoteController extends GetxController {
     isLoading(true);
     notes.clear();
     images.clear();
-    var notesResponse = await _apiServices.getRequest(endPoint: 'notes/');
+    Map<String, dynamic>? notesResponse =
+        await _apiServices.getRequest(endPoint: 'notes/');
     var imageResponse = await _apiServices.getRequest(endPoint: 'images/');
 
     if (notesResponse != null) {
-      notesResponse = jsonDecode(notesResponse.body);
-      notesResponse.forEach(
+      notesResponse['data'].forEach(
         (element) => notes.add(Note.fromJson(element)),
       );
     }
     if (imageResponse != null) {
-      imageResponse = jsonDecode(imageResponse.body);
       imageResponse.forEach((image) => images.add(NoteImage.fromJson(image)));
     }
-    log("Notes: ${notesResponse.toString()}");
+    log("Notes: ${notesResponse!['data'].toString()}");
     log("Images: ${imageResponse.toString()}");
 
     isLoading(false);
@@ -84,7 +82,6 @@ class NoteController extends GetxController {
           });
 
       if (response != null) {
-        response = jsonDecode(response.body);
         log(response.toString());
 
         if (response['message'] == 'success') {
@@ -114,17 +111,19 @@ class NoteController extends GetxController {
   }
 
   bool changed() {
-    return !(title.text == currNote!.title &&
-        content.text == currNote!.content &&
-        imgPosition.value.dx == currImage!.imagePosX &&
-        imgPosition.value.dy == currImage!.imagePosY);
+    if (currImage != null) {
+      return !(title.text == currNote!.title &&
+          content.text == currNote!.content &&
+          imgPosition.value.dx == currImage!.imagePosX &&
+          imgPosition.value.dy == currImage!.imagePosY);
+    } else {
+      return !(title.text == currNote!.title &&
+          content.text == currNote!.content);
+    }
   }
 
   void updateNote() async {
     if (changed()) {
-      log("Image Position X: ${imgPosition.value.dx}");
-      log("Image Position Y: ${imgPosition.value.dy}");
-
       var response = await _apiServices.postRequestWithFile(
           endPoint: 'notes/update.php',
           fileField: 'image',
@@ -135,11 +134,11 @@ class NoteController extends GetxController {
             'content': content.text,
             'color': color.text,
             'image_pos_x': '${imgPosition.value.dx}',
-            'image_pos_y': '${imgPosition.value.dy}'
+            'image_pos_y': '${imgPosition.value.dy}',
+            if (currImage != null) 'old_image': currImage!.imageName
           });
 
       if (response != null) {
-        response = jsonDecode(response.body);
         log(response.toString());
 
         if (response['message'] == 'success') {
@@ -147,7 +146,7 @@ class NoteController extends GetxController {
           Get.back();
           loadNotes();
         } else {
-          showSnackbar(title: "Err:", message: response['message']);
+          showSnackbar(title: "Error:", message: response['message']);
         }
       }
     }
@@ -156,12 +155,13 @@ class NoteController extends GetxController {
   //=================[ Delete ]================
 
   void deleteNote() async {
-    var response = await _apiServices.postRequest(
-        endPoint: 'notes/delete.php',
-        data: {'id': '${currNote!.id}', 'image_name': currImage!.imageName});
+    Map<String, dynamic>? response =
+        await _apiServices.postRequest(endPoint: 'notes/delete.php', data: {
+      'id': '${currNote!.id}',
+      if (currImage != null) 'image_name': currImage!.imageName
+    });
 
     if (response != null) {
-      response = jsonDecode(response.body);
       log(response.toString());
 
       if (response['message'] == 'success') {
@@ -204,15 +204,16 @@ class NoteController extends GetxController {
     content.clear();
     color.clear();
     title.clear();
+    currImage = null;
     currNote = null;
     _image = null;
     update();
   }
 
-  @override
-  void onInit() {
-    super.onInit();
-  }
+  // @override
+  // void onInit() {
+  //   super.onInit();
+  // }
 
   @override
   void onReady() {

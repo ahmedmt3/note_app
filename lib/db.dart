@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -29,7 +31,7 @@ class SqlDb {
     ''');
     await db.batch().commit();
 
-    print("====> On Upgrade Called <=====================");
+    log("====> On Upgrade Called <=====================");
   }
 
   _onCreate(Database db, int version) async {
@@ -42,7 +44,7 @@ class SqlDb {
       "created_at" TEXT NOT NULL DEFAULT '${DateTime.now().toIso8601String()}'
     )
     ''');
-    print("====> On Create Called <=====================");
+    log("====> On Create Called <=====================");
   }
 
   // SELECT
