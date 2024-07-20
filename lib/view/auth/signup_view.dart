@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:note_app/controller/auth_controller.dart';
-import 'package:note_app/core/config/app_routes.dart';
 import 'package:note_app/view/auth/widgets/auth_custom_button_widget.dart';
 import 'package:note_app/view/auth/widgets/cutstom_text_field_widget.dart';
 
-class LoginView extends GetView<AuthController> {
-  const LoginView({super.key});
+class SignupView extends GetView<AuthController> {
+  const SignupView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Login",
+          "Signup",
         ),
       ),
       body: SafeArea(
@@ -21,6 +20,12 @@ class LoginView extends GetView<AuthController> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
+              CutstomTextFieldWidget(
+                name: "Email: ",
+                controller: controller.email,
+                hintText: "Enter your email address",
+              ),
+              const SizedBox(height: 20),
               CutstomTextFieldWidget(
                 name: "Username: ",
                 controller: controller.username,
@@ -35,19 +40,8 @@ class LoginView extends GetView<AuthController> {
               ),
               const SizedBox(height: 40),
               AuthCustomButtonWidget(
-                text: "Login",
-                onPressed: ()=> controller.login(),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text("Dont have an account?"),
-                  TextButton(
-                    onPressed: () => Get.offNamed(AppRoutes.signup),
-                    child: const Text("Signup"),
-                  )
-                ],
+                text: "Signup",
+                onPressed: () => controller.signup(),
               ),
             ],
           ),

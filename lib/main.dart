@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:note_app/view/auth/login_view.dart';
-import 'package:note_app/view/main/note_view.dart';
-import 'package:note_app/view/main/home_view.dart';
+import 'package:note_app/core/config/app_routes.dart';
+import 'package:note_app/util/services/initial_bindings.dart';
 
 void main() {
   runApp(const MainApp());
@@ -16,21 +15,9 @@ class MainApp extends StatelessWidget {
     return GetMaterialApp(
       theme: ThemeData(),
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
-      getPages: [
-        GetPage(
-          name: '/',
-          page: (() => HomePage()),
-        ),
-        GetPage(
-          name: '/notePage',
-          page: () => NoteView(),
-        ),
-        GetPage(
-          name: '/login',
-          page: () => const LoginView(),
-        )
-      ],
+      initialRoute: AppRoutes.home,
+      getPages: AppRoutes.routes,
+      initialBinding: InitialBinding(),
     );
   }
 }

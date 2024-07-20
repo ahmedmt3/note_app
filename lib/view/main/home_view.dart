@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lottie/lottie.dart';
 import 'package:note_app/controller/note_controller.dart';
 import 'package:note_app/core/theme/app_styles.dart';
 import 'package:note_app/view/widgets/app_drawer.dart';
@@ -34,10 +35,16 @@ class HomePage extends StatelessWidget {
                   onRefresh: () async => await noteController.loadNotes(),
                   child: noteController.notes.isEmpty
                       ? Center(
-                          child: Text(
-                            "You have't added any Notes",
-                            style: AppStyles.bodyRegularL
-                                .copyWith(color: Colors.grey[600]),
+                          child: Column(
+                            children: [
+                              Lottie.asset('assets/lotties/empty.json',
+                                  ),
+                              Text(
+                                "You have't added any Notes",
+                                style: AppStyles.bodyRegularL
+                                    .copyWith(color: Colors.grey[600]),
+                              ),
+                            ],
                           ),
                         )
                       : GridView.builder(
