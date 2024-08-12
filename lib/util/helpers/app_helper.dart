@@ -1,6 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_utils/src/get_utils/get_utils.dart';
 
 class AppHelper {
+  /// Validating inputus from diffrent types
+  static String? validateInput(String val, int min, int max, String type) {
+    if (type == 'username') {
+      if (!GetUtils.isUsername(val)) {
+        return "Invalid username";
+      }
+    }
+    if (type == 'email') {
+      if (!GetUtils.isEmail(val)) {
+        return "Invalid email type";
+      }
+    }
+    if (val.isEmpty) {
+      return "Can't be empty";
+    }
+    if (val.length < min) {
+      return "Can't be less than $min";
+    }
+    if (val.length > max) {
+      return "Can't be larger than $max";
+    }
+    return null;
+  }
+
+  /// ### 📆 Formate the dateTime object to human readable format.
   static String formatDate(String dateString) {
     DateTime dateTime = DateTime.parse(dateString);
     Duration difference = DateTime.now().difference(dateTime);
@@ -34,6 +60,7 @@ class AppHelper {
   static double screenHeight(BuildContext ctx) {
     return MediaQuery.of(ctx).size.height;
   }
+
   static double screenWidth(BuildContext ctx) {
     return MediaQuery.of(ctx).size.width;
   }

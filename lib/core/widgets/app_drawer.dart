@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:note_app/controller/auth_controller.dart';
 import 'package:note_app/controller/note_controller.dart';
-import 'package:note_app/view/widgets/drawer_menu_widget.dart';
+import 'package:note_app/core/widgets/drawer_menu_widget.dart';
 
 class AppDrawer extends StatelessWidget {
   AppDrawer({
     super.key,
   });
   final NoteController noteController = Get.find<NoteController>();
+  final AuthController authController = Get.find<AuthController>();
 
   @override
   Widget build(BuildContext context) {
@@ -17,17 +19,18 @@ class AppDrawer extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
-                SizedBox(width: 30),
-                SizedBox(
-                  width: 150,
-                  height: 150,
+                const SizedBox(
+                  width: 50,
+                  height: 50,
                   child: CircleAvatar(
                     backgroundImage:
                         AssetImage('assets/images/user-avatar.png'),
                   ),
                 ),
+                const SizedBox(width: 15),
+                Text("Hello ${authController.user!.username}")
               ],
             ),
             const SizedBox(height: 20),
@@ -57,7 +60,7 @@ class AppDrawer extends StatelessWidget {
               title: "Logout",
               icon: Icons.logout_outlined,
               iconColor: Colors.redAccent,
-              onTap: () => Get.toNamed('/login'),
+              onTap: authController.logout,
               textColor: Colors.redAccent,
             ),
           ],

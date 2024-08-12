@@ -1,5 +1,3 @@
-import 'package:note_app/model/image.dart';
-
 class Note {
   int? id;
   int? userId;
@@ -8,7 +6,6 @@ class Note {
   String? color;
   String? createdAt;
   String? lastModified;
-  List<NoteImage>? images;
 
   Note({
     this.id,

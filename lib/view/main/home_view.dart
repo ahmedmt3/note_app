@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:lottie/lottie.dart';
 import 'package:note_app/controller/note_controller.dart';
+import 'package:note_app/core/config/app_routes.dart';
 import 'package:note_app/core/theme/app_styles.dart';
-import 'package:note_app/view/widgets/app_drawer.dart';
+import 'package:note_app/core/widgets/app_drawer.dart';
 import 'package:note_app/view/main/widgets/note_card_widget.dart';
 
 class HomePage extends StatelessWidget {
@@ -17,7 +18,7 @@ class HomePage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           noteController.clearFields();
-          Get.toNamed('/notePage');
+          Get.toNamed(AppRoutes.note);
         },
         child: const Icon(Icons.add),
       ),
@@ -32,13 +33,14 @@ class HomePage extends StatelessWidget {
                   child: CircularProgressIndicator(),
                 )
               : RefreshIndicator(
-                  onRefresh: () async => await noteController.loadNotes(),
+                  onRefresh: noteController.loadNotes,
                   child: noteController.notes.isEmpty
                       ? Center(
                           child: Column(
                             children: [
-                              Lottie.asset('assets/lotties/empty.json',
-                                  ),
+                              Lottie.asset(
+                                'assets/lotties/empty.json',
+                              ),
                               Text(
                                 "You have't added any Notes",
                                 style: AppStyles.bodyRegularL

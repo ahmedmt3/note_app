@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:note_app/util/services/app_middlewares.dart';
 import 'package:note_app/view/auth/login_view.dart';
 import 'package:note_app/view/auth/signup_view.dart';
 import 'package:note_app/view/main/home_view.dart';
@@ -22,6 +23,7 @@ class AppRoutes {
     GetPage(
       name: login,
       page: () => const LoginView(),
+      middlewares: appMiddlewares,
     ),
     GetPage(
       name: signup,

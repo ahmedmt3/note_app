@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:note_app/controller/note_controller.dart';
+import 'package:note_app/core/config/app_routes.dart';
 import 'package:note_app/util/helpers/app_helper.dart';
 import 'package:note_app/core/theme/app_styles.dart';
 
@@ -11,7 +12,7 @@ GestureDetector noteCard(Note note, NoteController noteController) {
     onTap: () {
       // If User tapped on a note, Take him to edit mode on note_view
       noteController.prepairUpdate(note);
-      Get.toNamed('/notePage', arguments: {'note': note});
+      Get.toNamed(AppRoutes.note, arguments: {'note': note});
     },
     child: Container(
         clipBehavior: Clip.hardEdge,

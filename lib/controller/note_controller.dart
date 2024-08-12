@@ -1,70 +1,45 @@
 import 'dart:developer';
-import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:note_app/model/image.dart';
 import 'package:note_app/model/note.dart';
-import 'package:note_app/util/helpers/app_loaders_helper.dart';
 import 'package:note_app/util/services/api_services.dart';
-import 'package:note_app/util/services/files_services.dart';
 
-import '../view/widgets/custom_snackbar.dart';
+import '../util/helpers/custom_snackbar.dart';
 
 class NoteController extends GetxController {
   final ApiServices _apiServices = ApiServices();
-  var notes = <Note>[].obs;
-  var images = <NoteImage>[].obs;
+  RxList<Note> notes = <Note>[].obs;
+  RxList<Note> favNotes = <Note>[].obs;
   TextEditingController title = TextEditingController();
   TextEditingController content = TextEditingController();
   TextEditingController color = TextEditingController();
   DateTime? createdAt;
   Note? currNote;
-  NoteImage? currImage;
   var isLoading = false.obs;
   final formKey = GlobalKey<FormState>();
-  final FilesServices _filesServices = FilesServices();
-  File? _image;
   bool fromDelete = false;
-  Rx<Offset> imgPosition = const Offset(100, 100).obs;
 
   /*
   ======================================================
   ================[ Loading All Notes ]=================
   ======================================================
   */
-  Future<void> loadNotes({bool showLoading = false}) async {
-    if (showLoading) {
-      AppLoaders.showLoading();
-      if (kDebugMode) {
-        await Future.delayed(const Duration(seconds: 2));
-      }
-    }
-
+  Future<void> loadNotes() async {
     isLoading(true);
+    update();
     notes.clear();
-    images.clear();
+
     Map<String, dynamic>? notesResponse =
         await _apiServices.getRequest(endPoint: 'notes/');
-    var imageResponse = await _apiServices.getRequest(endPoint: 'images/');
 
     if (notesResponse != null) {
       notesResponse['data'].forEach(
         (element) => notes.add(Note.fromJson(element)),
       );
     }
-    if (imageResponse != null) {
-      imageResponse['data']
-          .forEach((image) => images.add(NoteImage.fromJson(image)));
-    }
-    log("Notes: ${notesResponse!['data'].toString()}");
-    log("Images: ${imageResponse['data'].toString()}");
-
+    log("Notes: ${notes.length}");
     isLoading(false);
-    if (showLoading) {
-      AppLoaders.hideLoading();
-    }
     update();
   }
 
@@ -75,21 +50,15 @@ class NoteController extends GetxController {
   */
   void addNote() async {
     if (!content.text.isBlank!) {
-      var response = await _apiServices.postRequestWithFile(
-          endPoint: 'notes/add.php',
-          fileField: 'image',
-          file: _image,
-          data: {
-            'title': title.text.isEmpty ? "New Note" : title.text,
-            'content': content.text.isEmpty ? " " : content.text,
-            'image_pos_x': '${imgPosition.value.dx}',
-            'image_pos_y': '${imgPosition.value.dy}',
-            //You can send color, by default = #FFFFFF
-          });
+      var response =
+          await _apiServices.postRequest(endPoint: 'notes/add.php', data: {
+        'title': title.text.isEmpty,
+        'content': content.text.isEmpty ? " " : content.text,
+        //You can send color, by default = #FFFFFF
+      });
 
       if (response != null) {
-        log(response.toString());
-
+        log(response['message'].toString());
         if (response['status'] == 'success') {
           Get.back();
           clearFields();
@@ -112,59 +81,26 @@ class NoteController extends GetxController {
     title.text = note.title!;
     content.text = note.content!;
     currNote = note;
-    currImage = images.where((image) => image.noteId == note.id).firstOrNull;
-    if (currImage != null) {
-      imgPosition.value = Offset(currImage!.imagePosX!, currImage!.imagePosY!);
-    }
     update();
   }
 
   bool changed() {
-    if (_image != null) {
-      return true;
-    }
-    if (currImage != null) {
-      return !(title.text == currNote!.title &&
-          content.text == currNote!.content &&
-          imgPosition.value.dx == currImage!.imagePosX &&
-          imgPosition.value.dy == currImage!.imagePosY);
-    } else {
-      return !(title.text == currNote!.title &&
-          content.text == currNote!.content);
-    }
+    return !(title.text == currNote!.title &&
+        content.text == currNote!.content);
   }
 
   void updateNote() async {
     if (changed()) {
-      dynamic response;
-      if (_image != null) {
-        response = await _apiServices.postRequestWithFile(
-            endPoint: 'notes/update.php',
-            fileField: 'image',
-            file: _image,
-            data: {
-              'id': '${currNote!.id}',
-              'title': title.text,
-              'content': content.text,
-              'color': color.text,
-              'image_pos_x': '${imgPosition.value.dx}',
-              'image_pos_y': '${imgPosition.value.dy}',
-              if (currImage != null) 'old_image': currImage!.imageName
-            });
-      } else {
-        response =
-            await _apiServices.postRequest(endPoint: 'notes/update.php', data: {
-          'id': '${currNote!.id}',
-          'title': title.text,
-          'content': content.text,
-          'color': color.text,
-          'image_pos_x': '${imgPosition.value.dx}',
-          'image_pos_y': '${imgPosition.value.dy}'
-        });
-      }
+      dynamic response =
+          await _apiServices.postRequest(endPoint: 'notes/update.php', data: {
+        'id': '${currNote!.id}',
+        'title': title.text,
+        'content': content.text,
+        'color': color.text,
+      });
 
       if (response != null) {
-        log(response.toString());
+        log(response['message'].toString());
 
         if (response['status'] == 'success') {
           clearFields();
@@ -186,7 +122,6 @@ class NoteController extends GetxController {
     Map<String, dynamic>? response =
         await _apiServices.postRequest(endPoint: 'notes/delete.php', data: {
       'id': '${currNote!.id}',
-      if (currImage != null) 'image_name': currImage!.imageName
     });
 
     if (response != null) {
@@ -205,16 +140,13 @@ class NoteController extends GetxController {
     }
   }
 
-  //=================[ Image functions ]================
-  void pickImage({bool fromCamera = false}) async {
-    var result = await _filesServices.pickImage(fromCamera: fromCamera);
-    if (result != null) {
-      _image = File(result.path);
-    }
-  }
-
-  void updateImgPosition(Offset newPosition) {
-    imgPosition.value = newPosition;
+  /*
+  =================================================
+  =============[ Add To Favourite ]================
+  =================================================
+  */
+  void addToFav(int id) {
+    favNotes.add(currNote!);
   }
 
   void onBackClick(bool click) {
@@ -232,9 +164,8 @@ class NoteController extends GetxController {
     content.clear();
     color.clear();
     title.clear();
-    currImage = null;
     currNote = null;
-    _image = null;
+
     update();
   }
 
@@ -245,7 +176,7 @@ class NoteController extends GetxController {
 
   @override
   void onReady() {
-    loadNotes(showLoading: true);
+    loadNotes();
     super.onReady();
   }
 }

@@ -36,7 +36,7 @@ class LoginView extends GetView<AuthController> {
               const SizedBox(height: 40),
               AuthCustomButtonWidget(
                 text: "Login",
-                onPressed: ()=> controller.login(),
+                onPressed: controller.login,
               ),
               const SizedBox(height: 20),
               Row(
