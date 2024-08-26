@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:note_app/controller/auth_controller.dart';
-import 'package:note_app/core/config/app_routes.dart';
 import 'package:note_app/util/helpers/app_helper.dart';
 import 'package:note_app/view/auth/widgets/auth_custom_button_widget.dart';
 import 'package:note_app/view/auth/widgets/cutstom_text_field_widget.dart';
@@ -59,7 +58,7 @@ class SignupView extends GetView<AuthController> {
                   children: [
                     const Text("Already have account?"),
                     TextButton(
-                      onPressed: () => Get.offNamed(AppRoutes.login),
+                      onPressed: controller.goToLogin,
                       child: const Text("Login"),
                     )
                   ],

@@ -31,7 +31,7 @@ class CutstomTextFieldWidget extends StatelessWidget {
           controller: controller,
           obscureText: isPassword,
           validator: validator,
-          autovalidateMode: AutovalidateMode.always,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           decoration: InputDecoration(
             enabledBorder: OutlineInputBorder(
               borderSide: const BorderSide(color: Colors.grey),

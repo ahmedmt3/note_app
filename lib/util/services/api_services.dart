@@ -1,64 +1,104 @@
 import 'dart:convert';
 
+import 'package:dartz/dartz.dart';
 import 'package:http/http.dart' as http;
 import 'package:note_app/core/config/app_config.dart';
+import 'package:note_app/util/helpers/api_response.dart';
+import 'package:note_app/util/helpers/app_helper.dart';
 
 class ApiServices {
-  Map<String, String> myheaders = {
-    'authorization': "Basic ${base64Encode(utf8.encode('ahmed:amt123'))}"
-  };
-
   //==========================[ GET ]============================
-  getRequest({required String endPoint}) async {
-    String fullUrl = AppConfig.baseUrl + endPoint;
+  Future<Either<ApiResponse, dynamic>> getRequest(
+      {required String endPoint}) async {
+    final String fullUrl = AppConfig.baseUrl + endPoint;
+    final bool online = await AppHelper.checkInternet();
 
-    http.Response response =
-        await http.get(Uri.parse(fullUrl), headers: myheaders);
+    if (online) {
+      http.Response response = await http.get(Uri.parse(fullUrl));
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      switch (response.statusCode) {
+        case 200:
+          return Right(jsonDecode(response.body));
+        case 401:
+          return const Left(ApiResponse.unauthorized);
+        case 404:
+          return const Left(ApiResponse.notFound);
+        default:
+          return const Left(ApiResponse.unknown);
+      }
     } else {
-      return null;
+      return const Left(ApiResponse.offline);
     }
   }
 
   //==========================[ POST ]============================
-  postRequest({required String endPoint, data}) async {
-    String fullUrl = AppConfig.baseUrl + endPoint;
+  Future<Either<ApiResponse, dynamic>> postRequest(
+      {required String endPoint, data}) async {
+    final String fullUrl = AppConfig.baseUrl + endPoint;
+    final bool online = await AppHelper.checkInternet();
 
-    http.Response response =
-        await http.post(Uri.parse(fullUrl), body: data, headers: myheaders);
+    if (online) {
+      http.Response response = await http.post(Uri.parse(fullUrl), body: data);
 
-    if (response.statusCode == 201) {
-      return jsonDecode(response.body);
+      switch (response.statusCode) {
+        case 200 || 201:
+          return Right(jsonDecode(response.body));
+        case 422:
+          return const Left(ApiResponse.unprocessableEntity);
+        case 409:
+          return const Left(ApiResponse.conflict);
+        case 401:
+          return const Left(ApiResponse.unauthorized);
+        default:
+          return const Left(ApiResponse.unknown);
+      }
     } else {
-      return null;
+      return const Left(ApiResponse.offline);
     }
   }
 
   //==========================[ PATCH ]============================
-  patchRequest({required String endPoint, data}) async {
-    String fullUrl = AppConfig.baseUrl + endPoint;
+  Future<Either<ApiResponse, dynamic>> patchRequest(
+      {required String endPoint, data}) async {
+    final String fullUrl = AppConfig.baseUrl + endPoint;
+    final bool online = await AppHelper.checkInternet();
 
-    http.Response response = await http.patch(Uri.parse(fullUrl), body: data);
+    if (online) {
+      http.Response response = await http.patch(Uri.parse(fullUrl), body: data);
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+     switch (response.statusCode) {
+        case 200:
+          return Right(jsonDecode(response.body));
+        case 422:
+          return const Left(ApiResponse.unprocessableEntity);
+        case 404:
+          return const Left(ApiResponse.notFound);
+        default:
+          return const Left(ApiResponse.unknown);
+      }
     } else {
-      return null;
+      return const Left(ApiResponse.offline);
     }
   }
 
   //==========================[ DELETE ]============================
-  deleteRequest({required String endPoint, data}) async{
-    String fullUrl = AppConfig.baseUrl + endPoint;
+  Future<Either<ApiResponse, dynamic>> deleteRequest({required String endPoint}) async {
+    final String fullUrl = AppConfig.baseUrl + endPoint;
+    final bool online = await AppHelper.checkInternet();
 
-    http.Response response = await http.patch(Uri.parse(fullUrl), body: data);
+    if (online) {
+      http.Response response = await http.delete(Uri.parse(fullUrl));
 
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+     switch (response.statusCode) {
+        case 200:
+          return Right(jsonDecode(response.body));
+        case 404:
+          return const Left(ApiResponse.notFound);
+        default:
+          return const Left(ApiResponse.unknown);
+      }
     } else {
-      return null;
+      return const Left(ApiResponse.offline);
     }
   }
   //=======================================================

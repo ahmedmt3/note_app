@@ -5,7 +5,7 @@ import 'package:note_app/core/config/app_routes.dart';
 
 List<GetMiddleware> appMiddlewares = [AuthMiddleware()];
 
-final GetStorage box = GetStorage();
+final GetStorage _box = GetStorage();
 
 class AuthMiddleware extends GetMiddleware {
   @override
@@ -13,7 +13,7 @@ class AuthMiddleware extends GetMiddleware {
 
   @override
   RouteSettings? redirect(String? route) {
-    if (box.read<Map<String, dynamic>>('user') != null) {
+    if (_box.read<Map<String, dynamic>>('user') != null) {
       return const RouteSettings(name: AppRoutes.home);
     }
     return null;

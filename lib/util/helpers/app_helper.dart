@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:get/get_utils/src/get_utils/get_utils.dart';
 
 class AppHelper {
@@ -63,5 +66,34 @@ class AppHelper {
 
   static double screenWidth(BuildContext ctx) {
     return MediaQuery.of(ctx).size.width;
+  }
+
+  static SnackbarController showSnackbar({
+    required String title,
+    required String message,
+    bool isError = true,
+  }) {
+    return Get.snackbar(
+      title,
+      message,
+      snackPosition: SnackPosition.BOTTOM,
+      isDismissible: true,
+      backgroundColor: isError ? Colors.red[400] : Colors.green,
+      colorText: Colors.white,
+    );
+  }
+
+   /// Checks internet connection, Returns `true` if online, `false` if offline
+  static Future<bool> checkInternet() async {
+    try {
+      var result = await InternetAddress.lookup('google.com');
+      if (result.isNotEmpty) {
+        return true;
+      } else {
+        return false;
+      }
+    } on SocketException catch (_) {
+      return false;
+    }
   }
 }

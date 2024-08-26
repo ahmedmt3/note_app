@@ -1,11 +1,13 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:note_app/controller/auth_controller.dart';
 import 'package:note_app/model/note.dart';
+import 'package:note_app/util/helpers/app_helper.dart';
 import 'package:note_app/util/services/api_services.dart';
-
-import '../util/helpers/custom_snackbar.dart';
 
 class NoteController extends GetxController {
   final ApiServices _apiServices = ApiServices();
@@ -19,6 +21,8 @@ class NoteController extends GetxController {
   var isLoading = false.obs;
   final formKey = GlobalKey<FormState>();
   bool fromDelete = false;
+  final GetStorage box = GetStorage();
+  final AuthController _authController = Get.find<AuthController>();
 
   /*
   ======================================================
@@ -28,17 +32,22 @@ class NoteController extends GetxController {
   Future<void> loadNotes() async {
     isLoading(true);
     update();
+
     notes.clear();
-
-    Map<String, dynamic>? notesResponse =
-        await _apiServices.getRequest(endPoint: 'notes/');
-
-    if (notesResponse != null) {
-      notesResponse['data'].forEach(
+    final int userId = _authController.user!.id!;
+    var response =
+        await _apiServices.getRequest(endPoint: 'notes?user=$userId');
+    response.fold((left) {
+      log("$left");
+      AppHelper.showSnackbar(title: "title", message: left.toString());
+    }, (right) {
+      right.forEach(
         (element) => notes.add(Note.fromJson(element)),
       );
-    }
-    log("Notes: ${notes.length}");
+      saveNotes();
+      log("Loaded Notes: ${notes.length}");
+    });
+
     isLoading(false);
     update();
   }
@@ -50,23 +59,25 @@ class NoteController extends GetxController {
   */
   void addNote() async {
     if (!content.text.isBlank!) {
-      var response =
-          await _apiServices.postRequest(endPoint: 'notes/add.php', data: {
-        'title': title.text.isEmpty,
-        'content': content.text.isEmpty ? " " : content.text,
+      final int userId = _authController.user!.id!;
+      final Map<String, dynamic> data = {
+        "user_id": userId,
+        'title': title.text.isEmpty ? 'New note' : title.text,
+        'content': content.text.isEmpty ? " " : content.text
         //You can send color, by default = #FFFFFF
-      });
+      };
+      var response = await _apiServices.postRequest(
+          endPoint: 'notes', data: jsonEncode(data));
 
-      if (response != null) {
-        log(response['message'].toString());
-        if (response['status'] == 'success') {
-          Get.back();
-          clearFields();
-          loadNotes();
-        } else {
-          showSnackbar(title: "Error:", message: response['message']);
-        }
-      }
+      response.fold((left) {
+        log("$left");
+        AppHelper.showSnackbar(title: "Error:", message: "$left");
+      }, (right) {
+        log(right.toString());
+        Get.back();
+        clearFields();
+        loadNotes();
+      });
     }
 
     update();
@@ -84,32 +95,28 @@ class NoteController extends GetxController {
     update();
   }
 
-  bool changed() {
-    return !(title.text == currNote!.title &&
-        content.text == currNote!.content);
-  }
+  bool changed() =>
+      !(title.text == currNote!.title && content.text == currNote!.content);
 
   void updateNote() async {
     if (changed()) {
-      dynamic response =
-          await _apiServices.postRequest(endPoint: 'notes/update.php', data: {
-        'id': '${currNote!.id}',
+      Map<String, dynamic> data = {
         'title': title.text,
-        'content': content.text,
-        'color': color.text,
+        'content': content.text
+        // 'color': color.text
+      };
+      var response = await _apiServices.patchRequest(
+          endPoint: 'notes/${currNote!.id}', data: jsonEncode(data));
+
+      response.fold((left) {
+        log("$left");
+        AppHelper.showSnackbar(title: "Error:", message: "$left");
+      }, (right) {
+        log("$right");
+        clearFields();
+        Get.back();
+        loadNotes();
       });
-
-      if (response != null) {
-        log(response['message'].toString());
-
-        if (response['status'] == 'success') {
-          clearFields();
-          Get.back();
-          loadNotes();
-        } else {
-          showSnackbar(title: "Error:", message: response['message']);
-        }
-      }
     }
   }
 
@@ -119,25 +126,20 @@ class NoteController extends GetxController {
   =================================================
   */
   void deleteNote() async {
-    Map<String, dynamic>? response =
-        await _apiServices.postRequest(endPoint: 'notes/delete.php', data: {
-      'id': '${currNote!.id}',
+    var response =
+        await _apiServices.deleteRequest(endPoint: 'notes/${currNote!.id}');
+
+    response.fold((left) {
+      log("$left");
+      AppHelper.showSnackbar(title: "Error:", message: "$left");
+    }, (right) async {
+      log(right['message']);
+      clearFields();
+      fromDelete = true;
+      Get.back();
+      loadNotes();
+      fromDelete = false;
     });
-
-    if (response != null) {
-      log(response['message'].toString());
-
-      if (response['status'] == 'success') {
-        await Future.delayed(const Duration(milliseconds: 300));
-        clearFields();
-        fromDelete = true;
-        Get.back();
-        loadNotes();
-        fromDelete = false;
-      } else {
-        showSnackbar(title: "Error:", message: response['message']);
-      }
-    }
   }
 
   /*
@@ -159,6 +161,15 @@ class NoteController extends GetxController {
     }
   }
 
+  /*
+  =================================================
+  =============[ Save Notes Localy ]===============
+  =================================================
+  */
+  void saveNotes() async {
+    await box.write('notes', notes.toList());
+  }
+
   void clearFields() {
     title.clear();
     content.clear();
@@ -176,7 +187,13 @@ class NoteController extends GetxController {
 
   @override
   void onReady() {
-    loadNotes();
+    final storedNotes = box.read<List>('notes');
+    if (storedNotes != null) {
+      notes.value = storedNotes.map((json) => Note.fromJson(json)).toList();
+      update();
+    } else {
+      loadNotes();
+    }
     super.onReady();
   }
 }

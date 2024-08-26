@@ -1,6 +1,6 @@
 class AppConfig {
   // iOS Simulator
-  static const baseUrl = "http://localhost:8080/notesapi/";
+  static const baseUrl = "http://localhost:8080/api-note-app/";
   static const imageRoot = "http://localhost:8080/notesapi/images/uploads/";
   // Android Emulator
   // static const baseUrl = "http://10.0.2.2:8080/notesapi/";
